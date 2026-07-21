@@ -1,25 +1,72 @@
-# SKELETON - Module template
+# mod-full-group-xp
 
-[English](README.md) | [Español](README_ES.md)
+An [AzerothCore](https://www.azerothcore.org/) module that removes the XP penalty
+normally applied when killing mobs in a group. With this module enabled, every
+group member receives full experience per kill, regardless of party size.
 
+## Requirements
 
-## How to create your own module
+- [AzerothCore](https://github.com/azerothcore/azerothcore-wotlk) (Docker setup)
 
-1. Use the script `create_module.sh` located in [`modules/`](https://github.com/azerothcore/azerothcore-wotlk/tree/master/modules) to start quickly with all the files you need and your git repo configured correctly (heavily recommended).
-1. You can then use these scripts to start your project: https://github.com/azerothcore/azerothcore-boilerplates
-1. Do not hesitate to compare with some of our newer/bigger/famous modules.
-1. Edit the `README.md` and other files (`include.sh` etc...) to fit your module. Note: the README is automatically created from `README_example.md` when you use the script `create_module.sh`.
-1. Publish your module to our [catalogue](https://www.azerothcore.org/catalogue.html).
+## Installation
 
+1. Clone this module into your AzerothCore `modules` folder:
 
-## How to test your module?
+```bash
+   git clone https://github.com/rebosar/mod-full-group-xp.git modules/mod-full-group-xp
+```
 
-Disable PCH (precompiled headers) and try to compile. To disable PCH, set `-DNOPCH=1` with Cmake (more info [here](http://www.azerothcore.org/wiki/CMake-options)).
+2. Rebuild your containers so the module gets compiled in:
 
-If you forgot some headers, it is time to add them!
+```bash
+   docker compose build ac-worldserver
+   docker compose up -d
+```
 
-## Licensing
+   > If you're building multiple services (e.g. `ac-db-import`, `ac-worldserver`,
+   > `ac-authserver`), rebuild whichever ones your compose setup requires. A full
+   > clean rebuild can help avoid stale build cache issues after adding a new module:
+   >
+   > ```bash
+   > docker compose build --no-cache
+   > docker compose up -d
+   > ```
 
-The default license of the skeleton-module template is the MIT but you can use a different license for your own modules.
+3. Copy the default config file into your mounted config folder and rename it:
 
-So modules can also be kept private. However, if you need to add new hooks to the core, as well as improving existing ones, you have to share your improvements because the main core is released under the AGPL license. Please [provide a PR](https://www.azerothcore.org/wiki/How-to-create-a-PR) if that is the case.
+```bash
+   cp modules/mod-full-group-xp/conf/full_group_xp.conf.dist configs/modules/full_group_xp.conf
+```
+
+   > Adjust the destination path to match wherever your `docker-compose.yml`
+   > mounts the `etc/modules/` (or `configs/modules/`) directory on the host.
+
+4. Restart the worldserver container to pick up the new config:
+
+```bash
+   docker compose restart ac-worldserver
+```
+
+## Configuration
+
+Edit `full_group_xp.conf` to configure the module:
+
+| Option                | Description                          | Default |
+|------------------------|---------------------------------------|---------|
+| `FullGroupXP.Enable`   | Enable or disable the module (1/0)   | `1`     |
+
+## How it works
+
+By default, AzerothCore reduces the XP awarded per kill based on how many
+players are in the group sharing credit for that kill. This module hooks into
+`OnPlayerRewardKillRewarder` and, when enabled, forces the XP rate multiplier
+to `1.0`, removing the group-size penalty entirely.
+
+## License
+
+This module is released under the GNU AGPL v3 license, in line with
+AzerothCore. See [LICENSE](LICENSE) for details.
+
+## Contributing
+
+Issues and pull requests are welcome.
